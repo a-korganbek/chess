@@ -43,8 +43,8 @@ function PlayPage() {
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
   const [highlightedSquares, setHighlightedSquares] = useState<Record<string, object>>({});
   const [mode, setMode] = useState<Mode>("ai");
-  const [difficulty, setDifficulty] = useState<Difficulty | "beginner">("medium");
-  const [hintsEnabled, setHintsEnabled] = useState(true);
+  const [difficulty, setDifficulty] = useState<Difficulty>("medium");
+  const [hintsEnabled, setHintsEnabled] = useState(false);
   const [game, setGame] = useState(() => {
     const saved = sessionStorage.getItem("chessmind_fen");
     return saved ? new Chess(saved) : new Chess();
@@ -127,7 +127,7 @@ function PlayPage() {
     if (game.turn() === playerColor) return;
     setThinking(true);
     const id = setTimeout(() => {
-      const move = getBestMove(gameRef.current.fen(), difficulty === "beginner" ? "easy" : difficulty);
+      const move = getBestMove(gameRef.current.fen(), difficulty);
       if (move) {
         const next = new Chess(gameRef.current.fen());
         next.move({ from: move.from, to: move.to, promotion: move.promotion });
@@ -183,7 +183,7 @@ function PlayPage() {
 
   function onSquareClick({ square }: { square: string }) {
     if (gameOver || paused) return;
-    if (mode === "ai" && game.turn() !== playerColor && difficulty !== "beginner") return;
+    if (mode === "ai" && game.turn() !== playerColor) return;
 
     const piece = game.get(square as any);
 
@@ -220,7 +220,11 @@ function PlayPage() {
     ? (game.turn() === "w" ? "Ход белых" : "Ход чёрных")
     : (game.turn() === "w" ? "White to move" : "Black to move");
 
-  const difficultyLabel: Record<Difficulty, string> = { easy: isRu ? "Лёгкий" : "Easy", medium: isRu ? "Средний" : "Medium", hard: isRu ? "Сложный" : "Hard" };
+  const difficultyLabel: Record<Difficulty, string> = {
+    easy: isRu ? "Лёгкий" : "Easy",
+    medium: isRu ? "Средний" : "Medium",
+    hard: isRu ? "Сложный" : "Hard"
+  };
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -233,7 +237,7 @@ function PlayPage() {
               <ModeButton active={mode === "friend"} onClick={() => { setMode("friend"); reset(); }} icon={Users} label={isRu ? "против друга" : "vs Friend"} />
               {mode === "ai" && (
                 <div className="ml-auto flex gap-1 rounded-lg border border-border bg-secondary p-1">
-                  {(["beginner", "easy", "medium", "hard"] as (Difficulty | "beginner")[]).map((d) => (
+                  {(["easy", "medium", "hard"] as Difficulty[]).map((d) => (
                     <button
                       key={d}
                       onClick={() => { setDifficulty(d); reset(); }}
@@ -241,7 +245,7 @@ function PlayPage() {
                         difficulty === d ? "bg-gradient-gold text-primary-foreground shadow-gold" : "text-muted-foreground hover:text-foreground"
                       }`}
                     >
-                      {d === "beginner" ? (isRu ? "Новичок" : "Beginner") : difficultyLabel[d as Difficulty]}
+                      {difficultyLabel[d]}
                     </button>
                   ))}
                 </div>

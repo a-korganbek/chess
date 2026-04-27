@@ -89,7 +89,7 @@ export function Navbar() {
             <>
               <Link
                 to="/auth"
-                className="hidden rounded-md border border-border bg-secondary px-4 py-2 text-sm font-medium transition-smooth hover:bg-accent sm:inline-flex"
+                className="rounded-md border border-border bg-secondary px-4 py-2 text-sm font-medium transition-smooth hover:bg-accent"
               >
                 {tr.signIn}
               </Link>

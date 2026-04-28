@@ -9,6 +9,14 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
+async function saveEmailToProfile(userId: string, email: string) {
+  await supabase.from("profiles").upsert({
+    id: userId,
+    email,
+    updated_at: new Date().toISOString(),
+  }, { onConflict: "id" });
+}
+
 function AuthPage() {
   const router = useRouter();
   const { lang } = useLang();
@@ -38,7 +46,7 @@ function AuthPage() {
     setLoading(true);
 
     if (isLogin) {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
         if (error.message.includes("Invalid login")) {
           setError(isRu ? "Неверный email или пароль" : "Invalid email or password");
@@ -46,10 +54,11 @@ function AuthPage() {
           setError(isRu ? "Ошибка входа. Попробуйте снова." : "Login error. Please try again.");
         }
       } else {
+        if (data.user) await saveEmailToProfile(data.user.id, data.user.email ?? "");
         router.navigate({ to: "/play" });
       }
     } else {
-      const { error } = await supabase.auth.signUp({ email, password });
+      const { data, error } = await supabase.auth.signUp({ email, password });
       if (error) {
         if (error.message.includes("already registered") || error.message.includes("User already registered")) {
           setError(isRu ? "Этот email уже зарегистрирован" : "This email is already registered");
@@ -57,6 +66,7 @@ function AuthPage() {
           setError(isRu ? "Ошибка регистрации. Попробуйте снова." : "Registration error. Please try again.");
         }
       } else {
+        if (data.user) await saveEmailToProfile(data.user.id, data.user.email ?? "");
         setIsLogin(true);
         setSuccess(isRu ? "Аккаунт создан! Войдите." : "Account created! Sign in.");
       }

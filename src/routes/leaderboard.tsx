@@ -25,44 +25,54 @@ function LeaderboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-   async function loadLeaderboard() {
-  const { data } = await supabase
-    .from("game_history")
-    .select("user_id, result");
+    async function loadLeaderboard() {
+      const { data } = await supabase
+        .from("game_history")
+        .select("user_id, result");
 
-  if (!data) { setLoading(false); return; }
+      if (!data) { setLoading(false); return; }
 
-  const map: Record<string, { wins: number; total: number }> = {};
-  for (const row of data) {
-    if (!map[row.user_id]) map[row.user_id] = { wins: 0, total: 0 };
-    map[row.user_id].total++;
-    if (row.result === "Win") map[row.user_id].wins++;
-  }
+      const map: Record<string, { wins: number; total: number }> = {};
+      for (const row of data) {
+        if (!map[row.user_id]) map[row.user_id] = { wins: 0, total: 0 };
+        map[row.user_id].total++;
+        if (row.result === "Win") map[row.user_id].wins++;
+      }
 
-  // Получаем usernames из profiles
-  const userIds = Object.keys(map);
-  const { data: profiles } = await supabase
-    .from("profiles")
-    .select("id, username")
-    .in("id", userIds);
+      const userIds = Object.keys(map);
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, username, email")
+        .in("id", userIds);
 
-  const profileMap: Record<string, string> = {};
-  for (const p of profiles ?? []) {
-    if (p.username) profileMap[p.id] = p.username;
-  }
-  const { data: { user } } = await supabase.auth.getUser();
-  const list: Player[] = Object.entries(map).map(([user_id, stats]) => ({
-    user_id,
-    email: profileMap[user_id] ?? (user?.id === user_id ? (user?.email ?? user_id.slice(0, 8) + "...") : user_id.slice(0, 8) + "..."),
-    wins: stats.wins,
-    total: stats.total,
-    wr: Math.round((stats.wins / stats.total) * 100),
-  })).sort((a, b) => b.wins - a.wins);
+      const profileMap: Record<string, { username?: string; email?: string }> = {};
+      for (const p of profiles ?? []) {
+        profileMap[p.id] = { username: p.username, email: p.email };
+      }
 
-  setPlayers(list);
-  setLoading(false);
-}
-loadLeaderboard();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      const list: Player[] = Object.entries(map).map(([user_id, stats]) => {
+        const profile = profileMap[user_id];
+        let displayName = profile?.username || profile?.email;
+        if (!displayName) {
+          displayName = user?.id === user_id
+            ? (user?.email ?? user_id.slice(0, 8) + "...")
+            : user_id.slice(0, 8) + "...";
+        }
+        return {
+          user_id,
+          email: displayName,
+          wins: stats.wins,
+          total: stats.total,
+          wr: Math.round((stats.wins / stats.total) * 100),
+        };
+      }).sort((a, b) => b.wins - a.wins);
+
+      setPlayers(list);
+      setLoading(false);
+    }
+    loadLeaderboard();
   }, []);
 
   return (
@@ -89,7 +99,7 @@ loadLeaderboard();
             <div>{isRu ? "Игрок" : "Player"}</div>
             <div className="text-right">{isRu ? "Победы" : "Wins"}</div>
             <div className="hidden text-right sm:block">{isRu ? "Игры" : "Games"}</div>
-            <div className="text-right">{isRu ? "процент побед" : "Win %"}</div>
+            <div className="text-right">{isRu ? "% побед" : "Win %"}</div>
           </div>
 
           {loading ? (
@@ -105,7 +115,7 @@ loadLeaderboard();
                   {i < 3 ? <Crown className={`h-4 w-4 ${i === 0 ? "text-gold" : i === 1 ? "text-muted-foreground" : "text-amber-700"}`} /> : null}
                   <span className="font-bold">{i + 1}</span>
                 </div>
-                <div className="font-medium">{p.email}</div>
+                <div className="font-medium truncate">{p.email}</div>
                 <div className="text-right font-mono font-semibold text-gold">{p.wins}</div>
                 <div className="hidden text-right text-muted-foreground sm:block">{p.total}</div>
                 <div className="text-right font-mono">{p.wr}%</div>

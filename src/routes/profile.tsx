@@ -44,10 +44,16 @@ function ProfilePage() {
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user);
-      if (data.user) loadProfile(data.user.id);
-      else setLoading(false);
-    });
+     setUser(data.user);
+  if (data.user) {
+    supabase.from("profiles").upsert({
+      id: data.user.id,
+      email: data.user.email,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: "id" });
+    loadProfile(data.user.id);
+  } else setLoading(false);
+});
     const { data: listener } = supabase.auth.onAuthStateChange((_e, session) => {
       setUser(session?.user ?? null);
       if (session?.user) loadProfile(session.user.id);
@@ -81,9 +87,10 @@ function ProfilePage() {
     setSaving(true);
     setSaveMsg(null);
     await supabase.from("profiles").upsert({
-      id: user.id,
-      username: username.trim(),
-      updated_at: new Date().toISOString(),
+    id: user.id,
+    username: username.trim(),
+    email: user.email,
+    updated_at: new Date().toISOString(),
     });
     if (newPassword.length >= 6) {
       const { error } = await supabase.auth.updateUser({ password: newPassword });

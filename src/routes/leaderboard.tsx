@@ -63,7 +63,14 @@ function LeaderboardPage() {
           total: stats.total,
           wr: Math.round((stats.wins / stats.total) * 100),
         };
-      }).sort((a, b) => b.wins - a.wins);
+      }).sort((a, b) => {
+        
+        if (b.wins !== a.wins) {
+          return b.wins - a.wins;
+        }
+        
+        return b.wr - a.wr;
+      });
 
       setPlayers(list);
       setLoading(false);

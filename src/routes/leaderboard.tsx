@@ -50,16 +50,12 @@ function LeaderboardPage() {
         profileMap[p.id] = { username: p.username, email: p.email };
       }
 
-      const { data: { user } } = await supabase.auth.getUser();
-
       const list: Player[] = Object.entries(map).map(([user_id, stats]) => {
         const profile = profileMap[user_id];
-        let displayName = profile?.username || profile?.email;
-        if (!displayName) {
-          displayName = user?.id === user_id
-            ? (user?.email ?? user_id.slice(0, 8) + "...")
-            : user_id.slice(0, 8) + "...";
-        }
+        const hasUsername = profile?.username && profile.username !== "null" && profile.username.trim() !== "";
+        const displayName = hasUsername
+          ? profile!.username!
+          : (profile?.email ?? user_id.slice(0, 8) + "...");
         return {
           user_id,
           email: displayName,

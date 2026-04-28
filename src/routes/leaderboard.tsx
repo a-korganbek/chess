@@ -90,12 +90,13 @@ function LeaderboardPage() {
         </div>
 
         <div className="mt-8 overflow-hidden rounded-2xl border border-border bg-gradient-card">
-          <div className="grid grid-cols-[60px_1fr_100px_80px_80px] gap-2 border-b border-border bg-background/40 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground sm:grid-cols-[60px_1fr_120px_120px_100px]">
-            <div>{isRu ? "Место" : "Rank"}</div>
+          {/* Заголовок таблицы */}
+          <div className="grid grid-cols-[40px_1fr_70px] gap-2 border-b border-border bg-background/40 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground sm:grid-cols-[60px_1fr_120px_120px_100px]">
+            <div>{isRu ? "№" : "#"}</div>
             <div>{isRu ? "Игрок" : "Player"}</div>
             <div className="text-right">{isRu ? "Победы" : "Wins"}</div>
             <div className="hidden text-right sm:block">{isRu ? "Игры" : "Games"}</div>
-            <div className="text-right">{isRu ? "% побед" : "Win %"}</div>
+            <div className="hidden text-right sm:block">{isRu ? "% побед" : "Win %"}</div>
           </div>
 
           {loading ? (
@@ -106,15 +107,15 @@ function LeaderboardPage() {
             </p>
           ) : (
             players.map((p, i) => (
-              <div key={p.user_id} className="grid grid-cols-[60px_1fr_100px_80px_80px] items-center gap-2 border-b border-border/40 px-4 py-3 text-sm transition-smooth last:border-0 hover:bg-accent/30 sm:grid-cols-[60px_1fr_120px_120px_100px]">
-                <div className="flex items-center gap-1.5">
+              <div key={p.user_id} className="grid grid-cols-[40px_1fr_70px] items-center gap-2 border-b border-border/40 px-4 py-3 text-sm transition-smooth last:border-0 hover:bg-accent/30 sm:grid-cols-[60px_1fr_120px_120px_100px]">
+                <div className="flex items-center gap-1">
                   {i < 3 ? <Crown className={`h-4 w-4 ${i === 0 ? "text-gold" : i === 1 ? "text-muted-foreground" : "text-amber-700"}`} /> : null}
                   <span className="font-bold">{i + 1}</span>
                 </div>
                 <div className="font-medium truncate">{p.email}</div>
                 <div className="text-right font-mono font-semibold text-gold">{p.wins}</div>
                 <div className="hidden text-right text-muted-foreground sm:block">{p.total}</div>
-                <div className="text-right font-mono">{p.wr}%</div>
+                <div className="hidden text-right font-mono sm:block">{p.wr}%</div>
               </div>
             ))
           )}

@@ -103,21 +103,28 @@ function PlayPage() {
     sessionStorage.removeItem("chessmind_fen");
     const opponent = mode === "ai" ? `ChessMind AI (${difficulty})` : "Friend (local)";
 
-    let result = "Draw";
-    const g = gameOver.toLowerCase();
-    if (g.includes("white wins") || g.includes("белые победили") || g.includes("белые выиграли")) {
-      result = "Win";
-    } else if (
-      g.includes("black wins") ||
-      g.includes("чёрные победили") ||
-      g.includes("чёрные выиграли") ||
-      g.includes("resigned") ||
-      g.includes("сдались") ||
-      g.includes("ai wins") ||
-      g.includes("ии победил")
-    ) {
-      result = "Loss";
-    }
+    // Определяем результат более точно
+let result = "Draw";
+const g = gameOver.toLowerCase();
+
+// Условия победы (если белые выиграли или черные сдались/проиграли по времени)
+const whiteWon = g.includes("white wins") || g.includes("белые победили") || g.includes("белые выиграли");
+const blackResigned = (g.includes("black resigned") || g.includes("чёрные сдались")) && mode === "friend";
+const aiResigned = g.includes("ai wins") === false && (g.includes("resigned") || g.includes("сдались")) && mode === "ai"; // Для режима против ИИ обычно сдается только игрок, но на будущее
+
+if (whiteWon || blackResigned) {
+  result = "Win";
+} else if (
+  g.includes("black wins") || 
+  g.includes("чёрные победили") || 
+  g.includes("чёрные выиграли") ||
+  g.includes("ai wins") ||
+  g.includes("ии победил") ||
+  (g.includes("you resigned") || g.includes("вы сдались")) ||
+  (g.includes("white resigned") || g.includes("белые сдались"))
+) {
+  result = "Loss";
+}
 
     saveGame(opponent, result, historyRef.current.length);
   }, [gameOver, mode, difficulty]);
@@ -176,9 +183,14 @@ function PlayPage() {
 
   function resign() {
     if (gameOver) return;
-    setGameOver(mode === "ai"
-      ? (isRu ? "Вы сдались — ИИ победил" : "You resigned — AI wins")
-      : (isRu ? `${game.turn() === "w" ? "Белые" : "Чёрные"} сдались` : `${game.turn() === "w" ? "White" : "Black"} resigned`));
+    if (mode === "ai") {
+      setGameOver(isRu ? "Вы сдались — ИИ победил" : "You resigned — AI wins");
+    } else {
+      
+      const winner = game.turn() === "w" ? (isRu ? "Чёрные" : "Black") : (isRu ? "Белые" : "White");
+      const loser = game.turn() === "w" ? (isRu ? "Белые" : "White") : (isRu ? "Чёрные" : "Black");
+      setGameOver(isRu ? `${loser} сдались — ${winner} победили` : `${loser} resigned — ${winner} wins`);
+    }
   }
 
   function onSquareClick({ square }: { square: string }) {

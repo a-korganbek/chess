@@ -225,7 +225,7 @@ function ProfilePage() {
                 <div key={g.id} className="flex items-center justify-between px-4 py-3 text-sm">
                   <div>
                     <p className="font-medium">{translateOpponent(g.opponent, isRu)}</p>
-                    <p className="text-xs text-muted-foreground">{g.moves} {isRu ? "ходов" : "moves"} · {formatDate(g.created_at)}</p>
+                    <p className="text-xs text-muted-foreground">{formatDate(g.created_at)}</p>
                   </div>
                   <span className={`rounded-md px-2.5 py-1 text-xs font-bold ${
                     g.result === "Win" ? "bg-gold/15 text-gold" : g.result === "Loss" ? "bg-destructive/15 text-destructive" : "bg-muted text-muted-foreground"
